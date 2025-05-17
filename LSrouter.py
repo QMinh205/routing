@@ -59,7 +59,26 @@ class LSrouter(Router):
             self.last_time = time_ms
             #   broadcast the link state of this router to all neighbors
             self.send_link_state_packet()
-
+            
+    def broadcast_link_state_packet(self, packet_content,received_port):
+        """Broadcast the link state to all neighbors."""
+        for port in self.neighbors:
+            if port == received_port:
+                continue    
+            dst = self.neighbors[port]
+            packet = Packet(Packet.ROUTING, self.addr, dst, packet_content)
+            self.send(port, packet)
+        
+    
+    def send_link_state_packet(self):
+        # send own Link State packet to all neighbors
+        packet_data ={
+            "link_state": self.link_state_db[self.addr],
+            "seq_number": self.seq_numbers[self.addr],
+            "addr": self.addr
+        }
+        self.broadcast_link_state_packet(json.dumps(packet_data), None)
+        
     def compute_shortest_paths(self):
         """Compute shortest paths to all nodes in the network."""
         #   Use the link state database to compute the shortest path to each node
