@@ -131,7 +131,7 @@ class LSrouter(Router):
             if addr == self.addr:
                 continue
             
-            # find the next hop
+            # find the next hop of paths[addr][1]
             for port in self.neighbors:
                 if self.neighbors[port] == paths[addr][1]:
                     self.forwarding_table[addr] = port
