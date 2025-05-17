@@ -110,12 +110,34 @@ class LSrouter(Router):
         """Handle current time."""
         if time_ms - self.last_time >= self.heartbeat_time:
             self.last_time = time_ms
-            # TODO
             #   broadcast the link state of this router to all neighbors
-            pass
+            self.send_link_state_packet()
 
+    def compute_shortest_paths(self):
+        """Compute shortest paths to all nodes in the network."""
+        #   Use the link state database to compute the shortest path to each node
+        graph = networkx.Graph()
+        
+        for addr in self.link_state_db:
+            graph.add_node(addr)
+            for neighbor in self.link_state_db[addr]:
+                cost = self.link_state_db[addr][neighbor]
+                graph.add_edge(addr, neighbor, weight=cost)
+
+        paths = networkx.single_source_dijkstra_path(graph, self.addr)
+        
+        #   Update the forwarding table accordingly
+        self.forwarding_table = {}
+        for addr in paths:
+            if addr == self.addr:
+                continue
+            
+            # find the next hop of paths[addr][1]
+            for port in self.neighbors:
+                if self.neighbors[port] == paths[addr][1]:
+                    self.forwarding_table[addr] = port
+                    break
     def __repr__(self):
         """Representation for debugging in the network visualizer."""
-        # TODO
         #   NOTE This method is for your own convenience and will not be graded
-        return f"LSrouter(addr={self.addr})"
+        return f"LSrouter(addr={self.addr} \n{self.neighbors} \n{self.forwarding_table})"
