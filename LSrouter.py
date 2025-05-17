@@ -41,17 +41,36 @@ class LSrouter(Router):
 
     def handle_new_link(self, port, endpoint, cost):
         """Handle new link."""
-        # TODO
-        #   update local data structures and forwarding table
-        #   broadcast the new link state of this router to all neighbors
-        pass
+        self.neighbors[port] = endpoint
+        
+        self.link_state_db[self.addr][endpoint] = cost
+        
+        if self.addr not in self.seq_numbers :
+            self.seq_numbers[self.addr] = 0
+        self.seq_numbers[self.addr] += 1
+        
+        self.compute_shortest_paths()
+
+        # broadcast the new link state of this router to all neighbors
+        self.send_link_state_packet()
 
     def handle_remove_link(self, port):
         """Handle removed link."""
-        # TODO
-        #   update local data structures and forwarding table
-        #   broadcast the new link state of this router to all neighbors
-        pass
+        if port not in self.neighbors:
+            return
+        
+        endpoint = self.neighbors[port]
+        del self.neighbors[port]
+        
+        if endpoint in self.link_state_db[self.addr]:
+            del self.link_state_db[self.addr][endpoint]
+        
+        self.seq_numbers[self.addr] += 1
+        
+        self.compute_shortest_paths()
+
+        # broadcast the new link state of this router to all neighbors
+        self.send_link_state_packet()
 
     def handle_time(self, time_ms):
         """Handle current time."""
